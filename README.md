@@ -12,9 +12,10 @@ Passos de Instalação:
 
 Instalação de Pré-Requisitos:
 
-Execute os seguintes comandos no terminal para atualizar o sistema e instalar os pacotes necessários:
+# Execute os seguintes comandos no terminal para atualizar o sistema e instalar os pacotes necessários:
 
 sudo apt-get update -y
+
 sudo apt-get upgrade -y
 
 # Instalar Apache
@@ -26,7 +27,6 @@ sudo apt-get install php libapache2-mod-php php-gd php-common php-mail php-mail-
 # Instalar MariaDB
 sudo apt -y install mariadb-server mariadb-client
 
-Configuração do Banco de Dados
 
 Configurar o banco de dados para o FreeRADIUS:
 
