@@ -1,135 +1,141 @@
-# Instalando-FreeRADIUS-e-daloRADIUS-no-Debian-12.2
+# Instruções de Instalação do FreeRADIUS e daloRADIUS
 
-#!/bin/sh
+Este guia fornece instruções passo a passo para a instalação do FreeRADIUS e daloRADIUS em um ambiente Linux. Esses passos foram testados em um ambiente Ubuntu e podem variar dependendo da distribuição do Linux.
+
+Pré-requisitos:
+
+-Ambiente Linux (este guia usa Ubuntu);
+
+-Acesso de administrador (ou sudo) no terminal.
+
+Passos de Instalação:
+
+Instalação de Pré-Requisitos:
+
+Execute os seguintes comandos no terminal para atualizar o sistema e instalar os pacotes necessários:
 
 sudo apt-get update -y
 sudo apt-get upgrade -y
 
-#Instalar Apache
+# Instalar Apache
 sudo apt-get install apache2
 
-#Instalar PHP
+# Instalar PHP e dependências
 sudo apt-get install php libapache2-mod-php php-gd php-common php-mail php-mail-mime php-mysql php-pear php-db php-mbstring php-xml php-curl
 
-#Instalar MariaDB
+# Instalar MariaDB
 sudo apt -y install mariadb-server mariadb-client
 
+Configuração do Banco de Dados
 
-#Configurando banco de dados para FreeRADIUS
+Configurar o banco de dados para o FreeRADIUS:
+
+# Configurar banco de dados para FreeRADIUS
 sudo mysql_secure_installation
 
-Enter current password for root (enter for none): Just press the Enter
-Set root password? [Y/n]: Y
-New password: Enter password
-Re-enter new password: Repeat password
-Remove anonymous users? [Y/n]: Y
-Disallow root login remotely? [Y/n]: Y
-Remove test database and access to it? [Y/n]:  Y
-Reload privilege tables now? [Y/n]:  Y
+# Siga as instruções interativas para configurar a segurança do MySQL
 
+# Criar banco de dados e usuário para o FreeRADIUS
 sudo mysql -u root -p
+
 CREATE DATABASE radius CHARACTER SET UTF8 COLLATE UTF8_BIN;
+
 CREATE USER 'radius'@'%' IDENTIFIED BY 'radius';
+
 GRANT ALL PRIVILEGES ON radius.* TO 'radius'@'%';
+
 QUIT;
 
+Instalação do FreeRADIUS
 
-#Instalar FreeRADIUS
+Instalar e configurar o FreeRADIUS:
+
 sudo apt policy freeradius
+
 sudo apt -y install freeradius freeradius-mysql freeradius-utils
 
-#Depois de instalado, importando o esquema do banco de dados MySQL do freeradius com o seguinte comando:
+# Importar esquema do banco de dados MySQL do FreeRADIUS
 sudo su -
-sudo mysql -u root -p radius < /etc/freeradius/3.0/mods-config/sql/main/mysql/schema.sql
-sudo  mysql -u root -p -e "use radius;show tables;"
 
-#Criando um link virtual para o módulo sql em:
+sudo mysql -u root -p radius < /etc/freeradius/3.0/mods-config/sql/main/mysql/schema.sql
+
+sudo mysql -u root -p -e "use radius;show tables;"
+
+# Criar link virtual para o módulo sql
+
 sudo ln -s /etc/freeradius/3.0/mods-available/sql /etc/freeradius/3.0/mods-enabled/
 
+# Configurar arquivo sql no FreeRADIUS
 
-#Fazendo as seguintes alterações de acordo com seu banco de dados:
 sudo nano /etc/freeradius/3.0/mods-enabled/sql
 
-sql {
-driver = "rlm_sql_mysql"
-dialect = "mysql"
+# Faça as alterações correspondentes ao seu banco de dados e salve o arquivo
 
-        mysql {
-                # If any of the files below are set, TLS encryption is enabled
-#                tls {
-#                       ca_file = "/etc/ssl/certs/ca-cert.pem"
-#                        ca_path = "/etc/ssl/certs/"
-#                       #certificate_file = "/etc/ssl/certs/private/client.crt"
-                        #private_key_file = "/etc/ssl/certs/private/client.key"
-#                        cipher = "DHE-RSA-AES256-SHA:AES128-SHA"
-#                        tls_required = no
-#                        tls_check_cert = no
-#                        tls_check_cert_cn = no
-#                }
+# Definir permissões adequadas
 
-# Connection info:
-server = "localhost"
-port = 3306
-login = "radius"
-password = "radius"
-
-# Database table configuration for everything except Oracle
-radius_db = "radius"
-}
-
-read_clients = yes
-client_table = "nas"
-
-#Salve e feche
-
-#Definindo as permissês adequadas
 sudo chgrp -h freerad /etc/freeradius/3.0/mods-available/sql
+
 sudo chown -R freerad:freerad /etc/freeradius/3.0/mods-enabled/sql
 
+# Reiniciar o FreeRADIUS
+
 sudo systemctl restart freeradius
+
 sudo systemctl status freeradius
 
-#Instalar daloRADIUS
+Instalação do daloRADIUS
+
+Instalar e configurar o daloRADIUS:
+
 sudo apt -y install wget unzip
+
 wget https://github.com/lirantal/daloradius/archive/refs/tags/1.3.zip
+
 unzip 1.3.zip
+
 mv daloradius-1.3 daloradius
+
 cd daloradius
 
+# Configurar o daloradius no MySQL
 
-#Configurando o daloradius
 sudo mysql -u root -p radius < contrib/db/fr2-mysql-daloradius-and-freeradius.sql 
+
 sudo mysql -u root -p radius < contrib/db/mysql-daloradius.sql
 
 cd ..
+
 sudo mv daloradius /var/www/html/
 
-sudo chown -R www-data:www-data /var/www/html/daloradius/
+# Configurar o daloradius.conf.php
+
 sudo cp /var/www/html/daloradius/library/daloradius.conf.php.sample /var/www/html/daloradius/library/daloradius.conf.php
-sudo chmod 664 /var/www/html/daloradius/library/daloradius.conf.php
 
 sudo nano /var/www/html/daloradius/library/daloradius.conf.php
 
-#Fazendo as seguintes alterações que correspondam ao seu banco de dados:
-sudo nano /var/www/html/daloradius/library/daloradius.conf.php
+# Faça as alterações correspondentes ao seu banco de dados e salve o arquivo
 
-$configValues['CONFIG_DB_HOST'] = 'localhost';
-$configValues['CONFIG_DB_PORT'] = '3306';
-$configValues['CONFIG_DB_USER'] = 'radius';
-$configValues['CONFIG_DB_PASS'] = 'radius';
-$configValues['CONFIG_DB_NAME'] = 'radius';
+# Importar tabelas do daloRAIUS MySQL para o banco de dados FreeRADIUS
 
-#Importando as tabelas daloRAIUS MySQL para o banco de dados FreeRADIUS
 cd /var/www/html/daloradius/
+
 sudo mysql -u root -p radius < /var/www/html/daloradius/contrib/db/fr2-mysql-daloradius-and-freeradius.sql
+
 sudo mysql -u root -p radius < /var/www/html/daloradius/contrib/db/mysql-daloradius.sql
 
+# Configurar permissões adequadas
 sudo chown -R www-data:www-data /var/www/html/daloradius/
 
+# Reiniciar serviços
 sudo systemctl restart freeradius.service apache2
 
-#Visite: 
+Acesso ao daloRADIUS
+
+Após concluir todos os passos acima, você pode acessar o daloRADIUS através do seguinte URL no seu navegador:
+
 http://localhost/daloradius/login.php
 
-Username: administrator
-Password: radius
+Usuário: administrator
+
+Senha: radius
+
