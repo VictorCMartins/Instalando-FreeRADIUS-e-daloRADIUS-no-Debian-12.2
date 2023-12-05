@@ -46,7 +46,7 @@ GRANT ALL PRIVILEGES ON radius.* TO 'radius'@'%';
 
 QUIT;
 
-Instalação do FreeRADIUS
+# Instalação do FreeRADIUS
 
 Instalar e configurar o FreeRADIUS:
 
@@ -83,7 +83,7 @@ sudo systemctl restart freeradius
 
 sudo systemctl status freeradius
 
-Instalação do daloRADIUS
+# Instalação do daloRADIUS
 
 Instalar e configurar o daloRADIUS:
 
@@ -129,7 +129,7 @@ sudo chown -R www-data:www-data /var/www/html/daloradius/
 # Reiniciar serviços
 sudo systemctl restart freeradius.service apache2
 
-Acesso ao daloRADIUS
+# Acesso ao daloRADIUS
 
 Após concluir todos os passos acima, você pode acessar o daloRADIUS através do seguinte URL no seu navegador:
 
@@ -138,4 +138,9 @@ http://localhost/daloradius/login.php
 Usuário: administrator
 
 Senha: radius
+
+![image](https://github.com/VictorCMartins/Instalando-FreeRADIUS-e-daloRADIUS-no-Debian-12.2/assets/106896403/45ff2a62-d956-4a6b-88bd-fabc4ecf1917)
+
+![image](https://github.com/VictorCMartins/Instalando-FreeRADIUS-e-daloRADIUS-no-Debian-12.2/assets/106896403/796ee2bb-d16a-4800-a8a1-a4f230992dc4)
+
 
